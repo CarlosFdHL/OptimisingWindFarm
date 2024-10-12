@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import numpy_financial as npf
 import sys
-from load_data_functions import *
+from scripts.load_data_functions import *
 
 #########################################
 # CALCULATION FUNCTIONS

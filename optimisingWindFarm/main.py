@@ -3,8 +3,9 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
-from calculations_functions import *
-from plot_functions import *
+from scripts.calculations_functions import *
+from scripts.plot_functions import *
+#from scripts.load_data_functions import *
 
 loan_options = pd.DataFrame(data = {'LOW': [14.82967991], 'MED': [23.12919455], 'HIGH': [31.42870918]})
 
@@ -23,8 +24,8 @@ def calculate_N_turbines(N):
         N = N[0]
 
     installed_capacity_MW = int(np.round(N)) * 14
-    output = calculate_npv(installed_capacity_MW, data_file="data.txt", loan_options=loan_options, 
-                         electricity_price_file="electricity_price_forecast.csv", power_output_file="power_output.csv")
+    output = calculate_npv(installed_capacity_MW, data_file="data/data.txt", loan_options=loan_options, 
+                         electricity_price_file="data/electricity_price_forecast.csv", power_output_file="data/power_output.csv")
     print('N: ', N, 'NPV: ', output)
     return -output
 
