@@ -2,15 +2,16 @@
 inflation_rate = 0.02 (Assuming constant)
 n_years = 30 : Lifetime of the project
 
-TAX = 0.25 : 25% of income
+TAX = 0.22 : 
 
 --- PROJECT DATA ---
 opex = 699641e-6 (MDKK/MW)
 capex_per_MW = 22.429553 (MDKK/MW)    
 A_max = 160 km^2
+WACC = 6.16 %
 
 --- LOAN DATA ---
-interest_rate = 0.04
+interest_rate = 0.0401
 loan_repayment_duration = 30 (years)
 
 --------------------

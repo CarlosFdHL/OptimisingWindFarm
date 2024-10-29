@@ -67,7 +67,8 @@ def load_project_data(data_file):
     capex_per_MW = read_number_in_file(data_file, 'capex_per_MW')
     opex_per_MW = read_number_in_file(data_file, 'opex')
     installed_capacity_MW = read_number_in_file(data_file, 'installed_capacity')
-    return capex_per_MW, opex_per_MW, installed_capacity_MW
+    wacc = read_number_in_file(data_file, 'WACC')
+    return capex_per_MW, opex_per_MW, installed_capacity_MW, wacc
 
 def load_loan_data(data_file, loan_options, option):
     """

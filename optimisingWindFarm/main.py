@@ -50,7 +50,6 @@ result = minimize(calculate_N_turbines, x0=x0, method='Nelder-Mead', bounds=boun
 
 NPV_objective = read_number_in_file(path  = "data/data.txt", start_line = "NPV_objective")
 
-print("NPV_objective: ", NPV_objective)
 
 
 
@@ -58,9 +57,9 @@ print("NPV_objective: ", NPV_objective)
 calculate_npv(result.x, data_file="data/data.txt", loan_options=loan_options, 
                          electricity_price_file="data/electricity_price_forecast.csv", power_output_file="data/power_output.csv",
                          loan_option=loan_option, extra_income = 0, print_option=1)
-print("Optimal value of N:", result.x)
-print("Optimal installed capacity (MW):", result.x * 14)
-print("Optimal value of the NPV:", -result.fun)
+print("Optimal value of N:", int(result.x))
+print("Optimal installed capacity :", int(result.x) * 14, "MW")
+print("Optimal value of the NPV:", -result.fun, "MDKK")
 print("Number of iterations:", result.nit)
 
 if (-result.fun < NPV_objective):
@@ -68,9 +67,7 @@ if (-result.fun < NPV_objective):
                             "data/electricity_price_forecast.csv", "data/power_output.csv",
                             loan_option))
         extra_income = - extra_income
-        print(" ")
-        print(f"The extra income needed per year to obtain an NPV of {NPV_objective} is {float(extra_income)} MDKK, that results in {float(extra_income/30)} MDKK per year.")
-        print(" ")
+        print(f"\nThe extra income needed per year to obtain an NPV of {NPV_objective} is {float(extra_income)} MDKK, that results in {float(extra_income/30)} MDKK per year.")
 
 plot_results()
 
