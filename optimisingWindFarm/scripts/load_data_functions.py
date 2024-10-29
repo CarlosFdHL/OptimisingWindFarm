@@ -99,7 +99,7 @@ def load_tax_data(data_file):
     """
     return read_number_in_file(data_file, 'TAX')
 
-def load_energy_data(electricity_file, power_file):
+def load_energy_data(electricity_file, power_file, N_turbines):
     """
     Loads energy data such as hourly electricity prices and power output.
 
@@ -108,5 +108,5 @@ def load_energy_data(electricity_file, power_file):
     - hourly_poutput (numpy array): Array of hourly power output values.
     """
     hourly_eprice = pd.read_csv(electricity_file, header=None).to_numpy().flatten()
-    hourly_poutput = pd.read_csv(power_file, header=None).to_numpy().flatten().T
+    hourly_poutput = pd.read_csv(power_file, header=None).to_numpy().flatten().T * N_turbines
     return hourly_eprice, hourly_poutput

@@ -7,7 +7,8 @@ from scripts.load_data_functions import *
 #########################################
 # CALCULATION FUNCTIONS
 
-def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_price_file, power_output_file):
+def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_price_file, 
+                  power_output_file, loan_option, extra_income, print_option = 0):
     """
     Calculates the Net Present Value (NPV) of the project.
 
@@ -22,20 +23,22 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
     - npv (float): Net Present Value of the project.
     """
     
+    N = installed_capacity_MW / 14
+
     # Load general data
     inflation_rate, n_years = load_general_data(data_file)
     
     # Load project data
     capex_per_MW, opex_per_MW, _ = load_project_data(data_file) #Also have the option to read from file the installed capacity
-    
+
     # Load loan data
-    interest_rate, loan_per_MW, loan_years = load_loan_data(data_file, loan_options, option = 'LOW')
+    interest_rate, loan_per_MW, loan_years = load_loan_data(data_file, loan_options, option = loan_option)
     
     # Load tax data
     tax_percentage = load_tax_data(data_file)
     
     # Load energy data
-    hourly_eprice, hourly_poutput = load_energy_data(electricity_price_file, power_output_file)
+    hourly_eprice, hourly_poutput = load_energy_data(electricity_price_file, power_output_file, N)
 
     # Calculate inflation matrix
     inflation_matrix = calculate_inflation_matrix(inflation_rate, n_years)
@@ -45,7 +48,22 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
     loan_vector = calculate_loan(loan, interest_rate, loan_years, n_years, inflation_matrix)
 
     # Calculate nominal revenue
-    nominal_revenue = calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_matrix)
+    nominal_revenue = calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_matrix, extra_income)
+    if print_option:
+        DSCR_condition = True
+        idx_array = []
+        for i, (revenue, loan) in enumerate(zip(nominal_revenue, loan_vector)):
+            if abs(revenue/loan) < 1.2:
+                DSCR_condition = False
+                idx_array.append(i)
+        print(" ")
+        if DSCR_condition == True:
+            print("This investment passess de DSCR test")
+        else:
+            print(f"This investment does NOT pass the DSCR test in years : {idx_array}")
+            print(nominal_revenue)
+            print(loan_vector)
+        print(" ")
 
     # Calculate costs vector
     costs_vector = calculate_costs_vector(loan_vector, opex_per_MW, installed_capacity_MW, n_years, inflation_matrix)
@@ -57,10 +75,11 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
     ebitda = nominal_revenue - costs_vector
 
     # Calculate taxes
-    taxes_vector = -(ebitda - amortization_vector) * tax_percentage
+    pre_tax = ebitda - amortization_vector
+    taxes_vector = np.where(pre_tax > 0, -pre_tax * tax_percentage, 0) # If pre_tax < 0, no taxes apply
 
     # Calculate free cash flow
-    free_cash_flow = ebitda + taxes_vector + amortization_vector
+    free_cash_flow = ebitda + taxes_vector
     free_cash_flow = np.insert(free_cash_flow, 0, -capex_per_MW * installed_capacity_MW)
 
     # Calculate NPV
@@ -105,9 +124,9 @@ def calculate_loan(loan_amount, interest_rate, loan_term, total_years, inflation
     loan_repayment_vector[:loan_term] = -annual_repayment_schedule
     adjusted_loan_repayment_vector = np.dot(inflation_adjustment_matrix, loan_repayment_vector)
     
-    return adjusted_loan_repayment_vector
+    return loan_repayment_vector
 
-def calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_matrix):
+def calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_matrix, extra_income):
     """
     Calculates the nominal revenue adjusted for inflation.
 
@@ -122,7 +141,9 @@ def calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_
     """
     real_erevenue = np.dot(hourly_eprice, hourly_poutput) / 10**6  # Revenue in MDKK
     nominal_revenue = np.ones(shape=(n_years,)) * real_erevenue
-    return np.dot(nominal_revenue, inflation_matrix)
+    nominal_revenue = np.dot(nominal_revenue, inflation_matrix) + np.full_like(nominal_revenue, extra_income) #Add extra income as a fixed value over the years
+
+    return nominal_revenue
 
 def calculate_costs_vector(loan_vector, opex_per_MW, installed_capacity_MW, n_years, inflation_matrix):
     """
@@ -174,4 +195,7 @@ if __name__ == '__main__':
     output = calculate_npv(installed_capacity_MW, data_file="data.txt", loan_options=loan_options, 
                          electricity_price_file="electricity_price_forecast.csv", power_output_file="power_output.csv")
     print(f'The NPV for {N} turbines is: {output} MDKK')
+    
 
+def calculate_extra_income(extra_income, installed_capacity_MW, data_file, loan_options, electricity_price_file, power_output_file, loan_option):
+    return calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_price_file, power_output_file, loan_option, extra_income)

@@ -28,5 +28,5 @@ def plot_results():
 
     # Show the plots
     plt.tight_layout()
-    plt.show()
+    #plt.show()
 
