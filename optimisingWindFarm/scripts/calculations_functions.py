@@ -91,16 +91,6 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
 
     # Calculate IRR
     irr = npf.irr(free_cash_flow)
-    if print_option:
-        print(f"Loan: {loan}")
-        print(f"Interest payment: {interest_payment}")
-        print(f"Debt payment: {debt_payment}")
-        print(f"Nominal revenue: {nominal_revenue}")
-        print(f"Costs: {costs_vector}")
-        print(f"Amortization: {amortization_vector}")
-        print(f"EBITDA: {ebitda}")
-        print(f"Taxes: {taxes_vector}")
-        print(f"Free cash flow: {free_cash_flow}")
 
     if print_option:
         print(free_cash_flow)
@@ -169,7 +159,6 @@ def calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_
     - nominal_revenue (numpy array): Array of nominal revenues for each year.
     """
     real_erevenue = np.dot(hourly_eprice, hourly_poutput) / 10**6  # Revenue in MDKK
-    print("Real revenue: ", real_erevenue)
     nominal_revenue = np.ones(shape=(n_years,)) * real_erevenue
     nominal_revenue = np.dot(nominal_revenue, inflation_matrix) + np.full_like(nominal_revenue, extra_income) #Add extra income as a fixed value over the years
 
