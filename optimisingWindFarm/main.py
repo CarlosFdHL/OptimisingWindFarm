@@ -10,8 +10,9 @@ from scripts.plot_functions import *
 import warnings
 warnings.filterwarnings("ignore") #Ignore warnings
 
-loan_options = pd.DataFrame(data = {'LOW': [14.82967991], 'MED': [23.12919455], 'HIGH': [31.42870918]})
-loan_option = 'MED'
+loan_options = pd.DataFrame(data = {'LOW': [12.4905691], 'MED': [18.9896121], 'HIGH': [25.4886551]}) #Loan options in MDKK/MW
+
+loan_option = 'LOW'
 
 def store(N):
 
@@ -27,11 +28,11 @@ def calculate_N_turbines(N):
     if isinstance(N, np.ndarray):
         N = N[0]
     N = int(N)
-    installed_capacity_MW = int(np.round(N)) * 14
+    installed_capacity_MW = N * 14
     output = calculate_npv(installed_capacity_MW, data_file="data/data.txt", loan_options=loan_options, 
                          electricity_price_file="data/electricity_price_forecast.csv", power_output_file="data/power_output.csv",
                          loan_option=loan_option, extra_income = 0)
-    print('N: ', N, 'NPV: ', output)
+    print('N: ', N, 'Installed capacity: ', installed_capacity_MW, 'NPV: ', output)
 
     return -output
 
@@ -41,7 +42,7 @@ def calculate_N_turbines(N):
 #    This translates to 800 <= N * 14 <= 1200, i.e., 800/14 <= N <= 1200/14
 # 2. Installed capacity divided by 7.5 should not be greater than 160
 #    This translates to N * 14 / 7.5 <= 160, i.e., N <= 160 * 7.5 / 14
-bounds = [(800 / 14, min(1200 / 14, 160 * 7.5 / 14))]
+bounds = [(800 / 14, min(1000 / 14, 160 * 7.5 / 14))]
 
 x0 = 58  # Initial value for N
 
@@ -54,7 +55,7 @@ NPV_objective = read_number_in_file(path  = "data/data.txt", start_line = "NPV_o
 
 
 # Print the results
-calculate_npv(result.x, data_file="data/data.txt", loan_options=loan_options, 
+calculate_npv(result.x * 14, data_file="data/data.txt", loan_options=loan_options, 
                          electricity_price_file="data/electricity_price_forecast.csv", power_output_file="data/power_output.csv",
                          loan_option=loan_option, extra_income = 0, print_option=1)
 print("Optimal value of N:", int(result.x))

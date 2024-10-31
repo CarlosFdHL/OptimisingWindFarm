@@ -86,7 +86,8 @@ def load_loan_data(data_file, loan_options, option):
     interest_rate = read_number_in_file(data_file, 'interest_rate')
     loan_per_MW = loan_options[option].iloc[0]  # Choosing 'option' option for loan per MW
     loan_years = int(read_number_in_file(data_file, 'loan_repayment_duration'))
-    return interest_rate, loan_per_MW, loan_years
+    loan_percentage = read_number_in_file(data_file, 'loan_percentage')
+    return interest_rate, loan_per_MW, loan_years, loan_percentage
 
 def load_tax_data(data_file):
     """
