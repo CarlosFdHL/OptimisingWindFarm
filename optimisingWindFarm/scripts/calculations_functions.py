@@ -7,6 +7,8 @@ from scripts.load_data_functions import *
 #########################################
 # CALCULATION FUNCTIONS
 
+opex_options = pd.DataFrame(data = {'LOW': [0.635], 'MED': [0.7], 'HIGH': [0.764]}) #OPEX options in MDKK/MW
+
 def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_price_file, 
                   power_output_file, loan_option, extra_income, print_option = 0):
     """
@@ -29,10 +31,10 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
     inflation_rate, n_years = load_general_data(data_file)
     
     # Load project data
-    capex_per_MW, opex_per_MW, _, wacc = load_project_data(data_file) # Also have the option to read from file the installed capacity
-
+    _, _, _, wacc = load_project_data(data_file) # Also have the option to read from file the installed capacity
+    opex_per_MW = opex_options[loan_option].iloc[0]
     # Load loan data
-    interest_rate, loan_per_MW, loan_years = load_loan_data(data_file, loan_options, option = loan_option)
+    interest_rate, loan_per_MW, loan_years, loan_percentage = load_loan_data(data_file, loan_options, option = loan_option)
     
     # Load tax data
     tax_rate = load_tax_data(data_file)
@@ -45,11 +47,14 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
 
     # Calculate loan vector
     loan = loan_per_MW * installed_capacity_MW
+    capex_per_MW = loan_per_MW
+    loan = loan * loan_percentage
     loan_vector, interest_payment, debt_payment = calculate_loan(loan, interest_rate, loan_years, n_years, inflation_matrix)
 
     # Calculate nominal revenue
     nominal_revenue = calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_matrix, extra_income)
 
+    # Check if the investment passes the DSCR test
     if print_option:
         DSCR_condition = True
         idx_array = []
@@ -72,7 +77,7 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
     amortization_vector = calculate_amortization_vector(capex_per_MW, installed_capacity_MW, n_years)
 
     # Calculate EBITDA
-    ebitda = nominal_revenue - costs_vector
+    ebitda = nominal_revenue + costs_vector
 
     # Calculate taxes
     taxes_vector = calculate_taxes(n_years, ebitda, amortization_vector, interest_payment, tax_rate)
@@ -87,7 +92,19 @@ def calculate_npv(installed_capacity_MW, data_file, loan_options, electricity_pr
     # Calculate IRR
     irr = npf.irr(free_cash_flow)
     if print_option:
-        print(f"IRR: {irr}")
+        print(f"Loan: {loan}")
+        print(f"Interest payment: {interest_payment}")
+        print(f"Debt payment: {debt_payment}")
+        print(f"Nominal revenue: {nominal_revenue}")
+        print(f"Costs: {costs_vector}")
+        print(f"Amortization: {amortization_vector}")
+        print(f"EBITDA: {ebitda}")
+        print(f"Taxes: {taxes_vector}")
+        print(f"Free cash flow: {free_cash_flow}")
+
+    if print_option:
+        print(free_cash_flow)
+        print(f"IRR: {round(irr, 5)}")
     return npv
 
 def calculate_inflation_matrix(inflation_rate, n_years):
@@ -112,7 +129,7 @@ def calculate_loan(loan_amount, interest_rate, loan_term, total_years, inflation
     - loan_amount (float): Total amount of the loan.
     - interest_rate (float): Annual interest rate of the loan.
     - loan_term (int): Duration of the loan in years.
-    - total_years (int): Total number of years for the repayment of the loan.
+    - total_years (int): Total lifespan of the project.
     - inflation_adjustment_matrix (numpy array): Matrix to adjust repayments for inflation.
     
     Returns:
@@ -152,6 +169,7 @@ def calculate_nominal_revenue(hourly_eprice, hourly_poutput, n_years, inflation_
     - nominal_revenue (numpy array): Array of nominal revenues for each year.
     """
     real_erevenue = np.dot(hourly_eprice, hourly_poutput) / 10**6  # Revenue in MDKK
+    print("Real revenue: ", real_erevenue)
     nominal_revenue = np.ones(shape=(n_years,)) * real_erevenue
     nominal_revenue = np.dot(nominal_revenue, inflation_matrix) + np.full_like(nominal_revenue, extra_income) #Add extra income as a fixed value over the years
 
@@ -173,7 +191,7 @@ def calculate_costs_vector(loan_vector, opex_per_MW, installed_capacity_MW, n_ye
     """
     opex_MDKK = -opex_per_MW * installed_capacity_MW  # OPEX in MDKK per year
     opex_vector = np.dot(inflation_matrix, np.ones((n_years,)) * opex_MDKK)
-    return -(loan_vector + opex_vector)
+    return (-loan_vector + opex_vector)
 
 def calculate_amortization_vector(capex_per_MW, installed_capacity_MW, n_years):
     """
