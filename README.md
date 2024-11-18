@@ -3,17 +3,29 @@ A Python program that optimizes wind farm capacity based on the number of turbin
 
 ## Project Structure
 ```
-Project/
+optimisingWindFarm/
 │
 ├── data/
 │   ├── data.txt                             # General project data (inflation, taxes, loan details, etc.)
 │   ├── electricity_price_forecast.csv       # Forecast of electricity prices over time
-│   └── power_output.csv                     # Power output data for the wind farm
+│   ├── power_output.csv                     # Power output data from the wind farm
+│   ├── sensitivity1/                        # Folder with sensitivity analysis data (scenario 1)
+│   ├── sensitivity2/                        # Folder with sensitivity analysis data (scenario 2)
+│   └── sensitivity3/                        # Folder with sensitivity analysis data (scenario 3)
+│
 ├── scripts/
-│   ├── load_data_functions.py               # Functions to load and process data
-│   ├── calculations_functions.py            # Functions to perform NPV and other financial calculations
-│   └── plot_functions.py                    # Functions to visualize the results and data
-└── main.py                                  # Main script to run the optimization process
+│   ├── load_data_functions.py               # Functions for loading and processing data
+│   ├── calculations_functions.py            # Functions for performing financial calculations like NPV
+│   ├── plot_functions.py                    # Functions for visualizing data and results
+│   └── plots.py                             # Script for generating plots using the defined functions
+│
+├── figures/                                 # Folder to store generated plots
+│
+├── main.py                                  # Main script to run the optimization process
+│
+└── README.md                                # Project documentation file
+
+
 ```
 ## How to run
 1. Install dependencies:
